@@ -70,6 +70,8 @@ func loadDefault() {
 	}
 }
 
+var LazerSkinResolver func(name string) *files.FileMap
+
 func checkInit() {
 	if info != nil {
 		return
@@ -84,6 +86,14 @@ func checkInit() {
 
 		var err error
 		fallbackPathCache, err = files.NewFileMap(filepath.Join(settings.General.GetSkinsDir(), FallbackSkin))
+
+		if err != nil && LazerSkinResolver != nil {
+			if fMap := LazerSkinResolver(FallbackSkin); fMap != nil {
+				log.Println("SkinManager: Fallback skin loaded from osu!lazer library:", FallbackSkin)
+				fallbackPathCache = fMap
+				err = nil
+			}
+		}
 
 		if err != nil {
 			log.Println("SkinManager:", FallbackSkin, "does not exist, falling back to default...")
@@ -107,6 +117,14 @@ func tryLoadSkin(name, fallbackName string) {
 
 	var err error
 	skinPathCache, err = files.NewFileMap(filepath.Join(settings.General.GetSkinsDir(), name))
+
+	if err != nil && LazerSkinResolver != nil {
+		if fMap := LazerSkinResolver(name); fMap != nil {
+			log.Println("SkinManager: Skin loaded from osu!lazer library:", name)
+			skinPathCache = fMap
+			err = nil
+		}
+	}
 
 	if err != nil {
 		log.Println(fmt.Sprintf("SkinManager: %s does not exist, falling back to %s...", name, fallbackName))

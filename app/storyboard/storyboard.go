@@ -74,8 +74,12 @@ func NewStoryboard(beatMap *beatmap.BeatMap) *Storyboard {
 		videos:     make([]sprite.ISprite, 0),
 	}
 
-	files := []string{
-		filepath.Join(settings.General.GetSongsDir(), beatMap.Dir, beatMap.File),
+	files := []string{}
+
+	if beatMap.Dir != "" && !filepath.IsAbs(beatMap.File) {
+		files = append(files, filepath.Join(settings.General.GetSongsDir(), beatMap.Dir, beatMap.File))
+	} else if beatMap.File != "" {
+		files = append(files, beatMap.File)
 	}
 
 	if fPath, err := beatMap.GetRelatedFile(files2.FixName(fmt.Sprintf("%s - %s (%s).osb", beatMap.Artist, beatMap.Name, beatMap.Creator))); err == nil {

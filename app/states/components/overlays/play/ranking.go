@@ -74,8 +74,18 @@ func NewRankingPanel(cursor *graphics.Cursor, ruleset *osu.OsuRuleSet, hitError 
 	bg.SetColor(color.NewL(0.75))
 
 	bgLoadFunc := func() {
-		image, err := texture.NewPixmapFileString(filepath.Join(settings.General.GetSongsDir(), ruleset.GetBeatMap().Dir, ruleset.GetBeatMap().Bg))
-		if err != nil {
+		var image *texture.Pixmap
+		var err error
+
+		if bMap := ruleset.GetBeatMap(); bMap != nil && bMap.Bg != "" {
+			if bgPath, errRel := bMap.GetRelatedFile(bMap.Bg); errRel == nil {
+				image, err = texture.NewPixmapFileString(bgPath)
+			} else {
+				image, err = texture.NewPixmapFileString(filepath.Join(settings.General.GetSongsDir(), bMap.Dir, bMap.Bg))
+			}
+		}
+
+		if err != nil || image == nil {
 			image, err = assets.GetPixmap("assets/textures/background-1.png")
 			if err != nil {
 				panic(err)

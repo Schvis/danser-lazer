@@ -17,6 +17,7 @@ import (
 	"github.com/wieku/danser-go/app/graphics"
 	"github.com/wieku/danser-go/app/graphics/gui/drawables"
 	"github.com/wieku/danser-go/app/input"
+	"github.com/wieku/danser-go/app/lazer"
 	"github.com/wieku/danser-go/app/osuapi"
 	"github.com/wieku/danser-go/app/settings"
 	"github.com/wieku/danser-go/app/states/components/common"
@@ -987,6 +988,17 @@ func (l *launcher) trySelectReplaysFromPaths(p []string) {
 				}
 			}
 
+			if !found {
+				if entry, err := lazer.QueryLazerBeatmap(replay.parsedReplay.BeatmapMD5, -1); err == nil {
+					if bMap, errLoad := lazer.LoadBeatMapFromLazer(entry); errLoad == nil {
+						launcherConfig.CurrentMode = Knockout
+						l.bld.setMap(bMap)
+						found = true
+						break
+					}
+				}
+			}
+
 			if found {
 				break
 			}
@@ -1016,6 +1028,17 @@ func (l *launcher) trySelectReplaysFromPaths(p []string) {
 func (l *launcher) trySelectReplay(replay *knockoutReplay) {
 	for _, bMap := range l.beatmaps {
 		if strings.ToLower(bMap.MD5) == strings.ToLower(replay.parsedReplay.BeatmapMD5) {
+			launcherConfig.CurrentMode = Replay
+			l.bld.replayPath = replay.path
+			l.bld.setMap(bMap)
+			l.bld.setReplay(replay.parsedReplay)
+
+			return
+		}
+	}
+
+	if entry, err := lazer.QueryLazerBeatmap(replay.parsedReplay.BeatmapMD5, -1); err == nil {
+		if bMap, errLoad := lazer.LoadBeatMapFromLazer(entry); errLoad == nil {
 			launcherConfig.CurrentMode = Replay
 			l.bld.replayPath = replay.path
 			l.bld.setMap(bMap)

@@ -15,6 +15,7 @@ import (
 	"github.com/wieku/danser-go/app/discord"
 	"github.com/wieku/danser-go/app/ffmpeg"
 	"github.com/wieku/danser-go/app/input"
+	"github.com/wieku/danser-go/app/lazer"
 	"github.com/wieku/danser-go/app/settings"
 	"github.com/wieku/danser-go/app/states"
 	"github.com/wieku/danser-go/app/utils"
@@ -352,12 +353,27 @@ func run() {
 				}
 			}
 
+			if beatMap == nil && (*md5 != "" || *id > -1) {
+				log.Println("Beatmap not found in database, checking osu!lazer library...")
+				if entry, errLazer := lazer.QueryLazerBeatmap(*md5, *id); errLazer == nil {
+					if b, errLoad := lazer.LoadBeatMapFromLazer(entry); errLoad == nil {
+						beatMap = b
+					} else {
+						log.Println("Failed to load beatmap from osu!lazer:", errLoad)
+					}
+				} else {
+					log.Println("Beatmap not found in osu!lazer:", errLazer)
+				}
+			}
+
 			if beatMap == nil {
 				log.Println("Beatmap not found, closing...")
 				closeAfterSettingsLoad = true
 			} else {
 				beatMap.UpdatePlayStats()
-				database.UpdatePlayStats(beatMap)
+				if beatMap.Dir != "" {
+					database.UpdatePlayStats(beatMap)
+				}
 			}
 
 			database.Close()

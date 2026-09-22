@@ -78,8 +78,18 @@ func NewBackground(loadDefault bool) *Background {
 
 func (bg *Background) SetBeatmap(beatMap *beatmap.BeatMap, loadDefault, loadStoryboards bool) {
 	bgLoadFunc := func() {
-		image, err := texture.NewPixmapFileString(filepath.Join(settings.General.GetSongsDir(), beatMap.Dir, beatMap.Bg))
-		if err != nil && loadDefault {
+		var image *texture.Pixmap
+		var err error
+
+		if beatMap.Bg != "" {
+			if bgPath, errRel := beatMap.GetRelatedFile(beatMap.Bg); errRel == nil {
+				image, err = texture.NewPixmapFileString(bgPath)
+			} else {
+				image, err = texture.NewPixmapFileString(filepath.Join(settings.General.GetSongsDir(), beatMap.Dir, beatMap.Bg))
+			}
+		}
+
+		if (err != nil || image == nil) && loadDefault {
 			image, err = assets.GetPixmap("assets/textures/background-1.png")
 			if err != nil {
 				panic(err)

@@ -36,11 +36,32 @@ func NewFileMap(path string) (*FileMap, error) {
 	return fileMap, nil
 }
 
+func NewCustomFileMap(basePath string, mapping map[string]string) *FileMap {
+	fPath := strings.ReplaceAll(basePath, "\\", "/")
+	if !strings.HasSuffix(fPath, "/") {
+		fPath += "/"
+	}
+
+	fileMap := &FileMap{
+		path:      fPath,
+		pathCache: make(map[string]string),
+	}
+
+	for k, v := range mapping {
+		fileMap.pathCache[strings.ToLower(k)] = v
+	}
+
+	return fileMap
+}
+
 func (f *FileMap) GetFile(path string) (string, error) {
 	sPath := strings.ToLower(f.path)
 	fPath := strings.TrimPrefix(strings.ReplaceAll(strings.ToLower(path), "\\", "/"), sPath)
 
 	if resolved, ok := f.pathCache[fPath]; ok {
+		if filepath.IsAbs(resolved) {
+			return resolved, nil
+		}
 		return filepath.Join(f.path, resolved), nil
 	}
 
@@ -51,7 +72,11 @@ func (f *FileMap) GetMap() map[string]string {
 	retMap := make(map[string]string)
 
 	for k, v := range f.pathCache {
-		retMap[k] = filepath.Join(f.path, v)
+		if filepath.IsAbs(v) {
+			retMap[k] = v
+		} else {
+			retMap[k] = filepath.Join(f.path, v)
+		}
 	}
 
 	return retMap

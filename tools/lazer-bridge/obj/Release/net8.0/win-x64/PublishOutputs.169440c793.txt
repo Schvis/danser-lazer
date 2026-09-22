@@ -1,0 +1,2 @@
+D:\so\danser-go\bin\lazer-bridge\lazer-bridge.pdb
+D:\so\danser-go\bin\lazer-bridge\lazer-bridge.exe

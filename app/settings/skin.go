@@ -38,6 +38,8 @@ type skin struct {
 var skinPath string
 var skinCache []string
 
+var LazerSkinProvider func() []string
+
 func (d *defaultsFactory) SkinOptions() []string {
 	if General.GetSkinsDir() != skinPath {
 		skinPath = General.GetSkinsDir()
@@ -55,6 +57,22 @@ func (d *defaultsFactory) SkinOptions() []string {
 			sort.Slice(skinCache, func(i, j int) bool {
 				return strings.ToLower(skinCache[i]) < strings.ToLower(skinCache[j])
 			})
+		}
+
+		if LazerSkinProvider != nil {
+			lazerSkins := LazerSkinProvider()
+			for _, ls := range lazerSkins {
+				exists := false
+				for _, sc := range skinCache {
+					if strings.EqualFold(sc, ls) {
+						exists = true
+						break
+					}
+				}
+				if !exists {
+					skinCache = append(skinCache, ls)
+				}
+			}
 		}
 
 		skinCache = append([]string{"default"}, skinCache...)

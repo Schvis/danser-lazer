@@ -27,6 +27,15 @@ func Init(_local bool) {
 	local = _local
 	localPath = env.LibDir()
 
+	// If Dev mode requested but assets folder does not exist beside exe, try reading assets.dpak
+	if local {
+		if fi, err := os.Stat(filepath.Join(localPath, "assets")); err != nil || !fi.IsDir() {
+			if _, errDpak := os.Stat(filepath.Join(localPath, "assets.dpak")); errDpak == nil {
+				local = false
+			}
+		}
+	}
+
 	if !local {
 		file, err := os.Open(filepath.Join(localPath, "assets.dpak"))
 		if err != nil {

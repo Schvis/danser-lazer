@@ -301,7 +301,18 @@ func (l *launcher) startGLFW() {
 		}
 	}
 
+	if launcherConfig.UseLazerPaths {
+		c.General.SwitchToLazer(true)
+	} else if c.General.UseLazer {
+		launcherConfig.UseLazerPaths = true
+		saveLauncherConfig()
+	}
+
 	settings.General.OsuSongsDir = c.General.OsuSongsDir
+	settings.General.OsuSkinsDir = c.General.OsuSkinsDir
+	settings.General.OsuReplaysDir = c.General.OsuReplaysDir
+	settings.General.UseLazer = c.General.UseLazer
+	settings.General.InvalidateCache()
 
 	l.currentConfig = c
 
@@ -1366,7 +1377,7 @@ func (l *launcher) drawConfigPanel() {
 		if imgui.ButtonV("Launcher settings", vec2(-1, 0)) {
 			wSize := imgui.WindowSize()
 
-			lEditor := newPopupF("About", popCustom, drawLauncherConfig)
+			lEditor := newPopupF("About", popCustom, drawLauncherConfig(l))
 			lEditor.width = wSize.X / 2
 			lEditor.height = wSize.Y * 0.9
 
@@ -1592,7 +1603,11 @@ func (l *launcher) openCurrentSettingsEditor() {
 		l.currentConfig.Save("", false)
 
 		if !compareDirs(l.currentConfig.General.OsuSongsDir, settings.General.OsuSongsDir) {
-			showMessage(mInfo, "This config has different osu! Songs directory.\nRestart the launcher to see updated maps")
+			settings.General.OsuSongsDir = l.currentConfig.General.OsuSongsDir
+			settings.General.OsuSkinsDir = l.currentConfig.General.OsuSkinsDir
+			settings.General.OsuReplaysDir = l.currentConfig.General.OsuReplaysDir
+			settings.General.InvalidateCache()
+			l.reloadMaps(nil)
 		}
 	}
 
@@ -1707,15 +1722,22 @@ func (l *launcher) setConfig(s string) {
 	if err != nil {
 		showMessage(mError, "Failed to read \"%s\" profile. Error: %s", s, err)
 	} else {
-		if !compareDirs(eConfig.General.OsuSongsDir, settings.General.OsuSongsDir) {
-			showMessage(mInfo, "This config has different osu! Songs directory.\nRestart the launcher to see updated maps")
-		}
+		songsChanged := !compareDirs(eConfig.General.OsuSongsDir, settings.General.OsuSongsDir)
 
 		l.bld.config = s
 		l.currentConfig = eConfig
 
 		*launcherConfig.Profile = l.bld.config
+		launcherConfig.UseLazerPaths = eConfig.General.UseLazer
 		saveLauncherConfig()
+
+		if songsChanged {
+			settings.General.OsuSongsDir = eConfig.General.OsuSongsDir
+			settings.General.OsuSkinsDir = eConfig.General.OsuSkinsDir
+			settings.General.OsuReplaysDir = eConfig.General.OsuReplaysDir
+			settings.General.InvalidateCache()
+			l.reloadMaps(nil)
+		}
 	}
 }
 

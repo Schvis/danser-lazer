@@ -11,6 +11,7 @@ func initGeneral() *general {
 	osuBaseDir := getOsuInstallation()
 
 	return &general{
+		UseLazer:          false,
 		OsuSongsDir:       filepath.Join(osuBaseDir, "Songs"),
 		OsuSkinsDir:       filepath.Join(osuBaseDir, "Skins"),
 		OsuReplaysDir:     filepath.Join(osuBaseDir, "Replays"),
@@ -21,6 +22,9 @@ func initGeneral() *general {
 }
 
 type general struct {
+	// Use osu!lazer paths instead of osu!stable
+	UseLazer bool `label:"Use osu!lazer paths"`
+
 	// Directory that contains osu! songs
 	OsuSongsDir string `long:"true" label:"osu! Songs directory" path:"Select osu! Songs directory"`
 
@@ -84,4 +88,34 @@ func (g *general) GetReplaysDir() string {
 	}
 
 	return *g.replaysDir
+}
+
+func GetOsuInstallation() string {
+	return getOsuInstallation()
+}
+
+func GetLazerInstallation() string {
+	return getLazerInstallation()
+}
+
+func (g *general) InvalidateCache() {
+	g.songsDir = nil
+	g.skinsDir = nil
+	g.replaysDir = nil
+}
+
+func (g *general) SwitchToLazer(lazer bool) {
+	g.UseLazer = lazer
+	if lazer {
+		baseDir := GetLazerInstallation()
+		g.OsuSongsDir = baseDir
+		g.OsuSkinsDir = baseDir
+		g.OsuReplaysDir = filepath.Join(baseDir, "exports")
+	} else {
+		baseDir := GetOsuInstallation()
+		g.OsuSongsDir = filepath.Join(baseDir, "Songs")
+		g.OsuSkinsDir = filepath.Join(baseDir, "Skins")
+		g.OsuReplaysDir = filepath.Join(baseDir, "Replays")
+	}
+	g.InvalidateCache()
 }

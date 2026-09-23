@@ -2,6 +2,7 @@ package launcher
 
 import (
 	"github.com/AllenDang/cimgui-go/imgui"
+	"github.com/wieku/danser-go/app/settings"
 	"github.com/wieku/danser-go/build"
 	"github.com/wieku/danser-go/framework/graphics/texture"
 	"github.com/wieku/danser-go/framework/math/mutils"
@@ -165,37 +166,51 @@ func drawAbout(dTex texture.Texture) {
 	}
 }
 
-func drawLauncherConfig() {
-	imgui.PushStyleVarVec2(imgui.StyleVarCellPadding, vec2(imgui.CurrentStyle().CellPadding().X, 10))
+func drawLauncherConfig(l *launcher) func() {
+	return func() {
+		imgui.PushStyleVarVec2(imgui.StyleVarCellPadding, vec2(imgui.CurrentStyle().CellPadding().X, 10))
 
-	checkboxOption("Check for updates on startup", &launcherConfig.CheckForUpdates)
+		if checkboxOptionChanged("Use osu!lazer paths (Songs, Skins, Replays)", &launcherConfig.UseLazerPaths) {
+			if l != nil && l.currentConfig != nil {
+				l.currentConfig.General.SwitchToLazer(launcherConfig.UseLazerPaths)
+				l.currentConfig.Save("", false)
+			}
+			settings.General.SwitchToLazer(launcherConfig.UseLazerPaths)
+			saveLauncherConfig()
+			if l != nil {
+				l.reloadMaps(nil)
+			}
+		}
 
-	checkboxOption("Load latest replay on startup", &launcherConfig.LoadLatestReplay)
+		checkboxOption("Check for updates on startup", &launcherConfig.CheckForUpdates)
 
-	checkboxOption("Speed up startup on slow HDDs.\nWon't detect deleted/updated\nmaps!", &launcherConfig.SkipMapUpdate)
+		checkboxOption("Load latest replay on startup", &launcherConfig.LoadLatestReplay)
 
-	checkboxOption("Load changes in Songs folder automatically", &launcherConfig.AutoRefreshDB)
+		checkboxOption("Speed up startup on slow HDDs.\nWon't detect deleted/updated\nmaps!", &launcherConfig.SkipMapUpdate)
 
-	checkboxOption("Show JSON paths in config editor", &launcherConfig.ShowJSONPaths)
+		checkboxOption("Load changes in Songs folder automatically", &launcherConfig.AutoRefreshDB)
 
-	checkboxOption("Show exported videos/images\nin explorer", &launcherConfig.ShowFileAfter)
+		checkboxOption("Show JSON paths in config editor", &launcherConfig.ShowJSONPaths)
 
-	checkboxOption("Preview selected maps", &launcherConfig.PreviewSelected)
+		checkboxOption("Show exported videos/images\nin explorer", &launcherConfig.ShowFileAfter)
 
-	imgui.AlignTextToFramePadding()
-	imgui.TextUnformatted("Preview volume")
+		checkboxOption("Preview selected maps", &launcherConfig.PreviewSelected)
 
-	volume := int32(launcherConfig.PreviewVolume * 100)
+		imgui.AlignTextToFramePadding()
+		imgui.TextUnformatted("Preview volume")
 
-	imgui.PushFont(Font16)
+		volume := int32(launcherConfig.PreviewVolume * 100)
 
-	imgui.SetNextItemWidth(-1)
+		imgui.PushFont(Font16)
 
-	if sliderIntSlide("##previewvolume", &volume, 0, 100, "%d%%", 0) {
-		launcherConfig.PreviewVolume = float64(volume) / 100
+		imgui.SetNextItemWidth(-1)
+
+		if sliderIntSlide("##previewvolume", &volume, 0, 100, "%d%%", 0) {
+			launcherConfig.PreviewVolume = float64(volume) / 100
+		}
+
+		imgui.PopFont()
+
+		imgui.PopStyleVar()
 	}
-
-	imgui.PopFont()
-
-	imgui.PopStyleVar()
 }

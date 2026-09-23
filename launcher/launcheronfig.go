@@ -15,6 +15,7 @@ import (
 
 var launcherConfig = &launcherConf{
 	Profile:          nil,
+	UseLazerPaths:    false,
 	CheckForUpdates:  true,
 	ShowFileAfter:    true,
 	PreviewSelected:  true,
@@ -31,6 +32,7 @@ var launcherConfig = &launcherConf{
 
 type launcherConf struct {
 	Profile          *string
+	UseLazerPaths    bool
 	CheckForUpdates  bool
 	ShowFileAfter    bool
 	PreviewSelected  bool

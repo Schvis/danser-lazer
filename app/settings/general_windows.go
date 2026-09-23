@@ -37,3 +37,13 @@ func getOsuInstallation() (path string) {
 
 	return
 }
+
+func getLazerInstallation() (path string) {
+	appData := os.Getenv("appdata")
+	if appData != "" {
+		roamingOsu := filepath.Join(appData, "osu")
+		return roamingOsu
+	}
+
+	return filepath.Join(os.Getenv("USERPROFILE"), "AppData", "Roaming", "osu")
+}

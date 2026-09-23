@@ -851,6 +851,18 @@ func (editor *settingsEditor) buildBool(jsonPath string, f reflect.Value, d refl
 
 		if imgui.Checkbox(jsonPath, &base) {
 			f.SetBool(base)
+			if d.Name == "UseLazer" {
+				editor.combined.General.SwitchToLazer(base)
+				if editor.current != nil && editor.current.General != nil {
+					editor.current.General.SwitchToLazer(base)
+				}
+				settings.General.SwitchToLazer(base)
+				launcherConfig.UseLazerPaths = base
+				saveLauncherConfig()
+				if editor.saveListener != nil {
+					editor.saveListener()
+				}
+			}
 			editor.search()
 		}
 	})
